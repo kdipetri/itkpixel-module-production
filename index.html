@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ITk Pixel Module Production</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f2f5; color: #333; padding: 24px; }
+    h1 { font-size: 1.5rem; margin-bottom: 20px; color: #1a1a2e; }
+
+    /* ── Mode bar (top-level navigation) ── */
+    .mode-bar { display: flex; gap: 10px; margin-bottom: 18px; }
+    .mode-btn {
+      padding: 10px 24px; cursor: pointer;
+      background: #dde3ec; border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 600;
+      transition: background 0.15s;
+    }
+    .mode-btn:hover { background: #c5cfe0; }
+    .mode-btn.active { background: #1a4fa0; color: white; }
+
+    /* ── Cluster bar ── */
+    .cluster-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .cluster-btn {
+      padding: 6px 14px; cursor: pointer; background: #eaecf0;
+      border: 1px solid #ccc; border-radius: 5px; font-size: 13px;
+      transition: background 0.15s;
+    }
+    .cluster-btn:hover { background: #d5dae4; }
+    .cluster-btn.active { background: #1e4fa0; color: white; border-color: #1e4fa0; }
+
+    /* ── Sub-tab bar ── */
+    .tab-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tab {
+      padding: 7px 16px; cursor: pointer; background: #dde3ec;
+      border: none; border-radius: 6px; font-size: 13px; font-weight: 500;
+      transition: background 0.15s;
+    }
+    .tab:hover { background: #c5cfe0; }
+    .tab.active { background: #3a6abf; color: white; }
+
+    /* ── Panels & grid ── */
+    .panel { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .panel img { max-width: 100%; max-height: 420px; width: 100%; height: auto; display: block; object-fit: contain; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); gap: 20px; }
+    .grid-item { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .grid-item .label { font-size: 13px; color: #666; margin-bottom: 8px; }
+    .grid-item img { max-width: 100%; max-height: 360px; height: auto; object-fit: contain; }
+
+    .divider { height: 1px; background: #dde3ec; margin: 6px 0 18px; }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<h1>ITk Pixel Module Production</h1>
+
+<!-- ── Top-level mode selector ── -->
+<div class="mode-bar">
+  <button class="mode-btn active" onclick="setMode('overview')">Production Overview</button>
+  <button class="mode-btn" onclick="setMode('cluster')">By Cluster</button>
+  <button class="mode-btn" onclick="setMode('compare')">Compare Clusters</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODE: Overview
+     ═══════════════════════════════════════════════ -->
+<div id="mode-overview">
+  <div class="overview-grid">
+    <div class="panel">
+      <img src="plots/monthly_modules.png" alt="Monthly production — all clusters">
+    </div>
+    <div class="panel">
+      <img src="plots/cumulative_pipeline.png" alt="Cumulative assembled modules — all clusters">
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODE: By Cluster
+     ═══════════════════════════════════════════════ -->
+<div id="mode-cluster" class="hidden">
+
+  <div class="cluster-bar" id="cluster-btns">
+    <button class="cluster-btn active" data-cluster="PIXEL_MODULE_JAPAN" onclick="selectCluster('PIXEL_MODULE_JAPAN')">Japan</button>
+    <button class="cluster-btn" data-cluster="PIXEL_MODULE_CERN_JAPAN" onclick="selectCluster('PIXEL_MODULE_CERN_JAPAN')">CERN–Japan</button>
+    <button class="cluster-btn" data-cluster="PIXEL_MODULE_FRANCE" onclick="selectCluster('PIXEL_MODULE_FRANCE')">France</button>
+    <button class="cluster-btn" data-cluster="PIXEL_MODULE_GERMANY_BMBF" onclick="selectCluster('PIXEL_MODULE_GERMANY_BMBF')">Germany BMBF</button>
+    <button class="cluster-btn" data-cluster="PIXEL_MODULE_GERMANY_MPI" onclick="selectCluster('PIXEL_MODULE_GERMANY_MPI')">Germany MPI</button>
+    <button class="cluster-btn" data-cluster="PIXEL_MODULE_UK" onclick="selectCluster('PIXEL_MODULE_UK')">UK</button>
+    <button class="cluster-btn" data-cluster="PIXEL_MODULE_USA" onclick="selectCluster('PIXEL_MODULE_USA')">USA</button>
+    <button class="cluster-btn" data-cluster="PIXEL_MODULE_ITALY" onclick="selectCluster('PIXEL_MODULE_ITALY')">Italy</button>
+    <button class="cluster-btn" data-cluster="PIXEL_MODULE_CERN" onclick="selectCluster('PIXEL_MODULE_CERN')">CERN</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="tab-bar" id="cluster-tabs">
+    <button class="tab active" onclick="showClusterTab('modules')">Number of Modules</button>
+    <button class="tab" onclick="showClusterTab('completion')">Time to Completion</button>
+  </div>
+
+  <div id="ct-modules">
+    <div class="overview-grid">
+      <div class="panel">
+        <img id="img-c-monthly" src="plots/monthly_modules_PIXEL_MODULE_JAPAN.png" alt="Monthly">
+      </div>
+      <div class="panel">
+        <img id="img-c-cumulative" src="plots/cumulative_pipeline_PIXEL_MODULE_JAPAN.png" alt="Cumulative pipeline">
+      </div>
+    </div>
+  </div>
+
+  <div id="ct-completion" class="hidden">
+    <div class="two-col">
+      <div class="panel">
+        <img id="img-c-summary-short" src="plots/stage_duration_summary_short_PIXEL_MODULE_JAPAN.png" alt="Stage duration summary">
+      </div>
+      <div class="panel">
+        <img id="img-c-batch" src="plots/batch_duration_PIXEL_MODULE_JAPAN.png" alt="Batch duration">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODE: Compare Clusters
+     ═══════════════════════════════════════════════ -->
+<div id="mode-compare" class="hidden">
+
+  <div class="tab-bar" id="compare-tabs">
+    <button class="tab active" onclick="showCompareTab('monthly')">Monthly Production</button>
+    <button class="tab" onclick="showCompareTab('histograms')">Stage Duration Histograms</button>
+  </div>
+
+  <div id="cmp-monthly">
+    <div class="panel">
+      <img src="plots/monthly_modules.png" alt="Monthly production — all clusters">
+    </div>
+  </div>
+
+  <div id="cmp-histograms" class="hidden">
+    <div class="grid">
+      <div class="grid-item"><div class="label">INIT → ASSEMBLY</div><img src="plots/duration_INIT_ASSEMBLY.png"></div>
+      <div class="grid-item"><div class="label">ASSEMBLY → WIREBONDING</div><img src="plots/duration_ASSEMBLY_WIREBONDING.png"></div>
+      <div class="grid-item"><div class="label">INIT → WIREBONDING</div><img src="plots/duration_INIT_WIREBONDING.png"></div>
+      <div class="grid-item"><div class="label">WIREBONDING → INITIAL WARM</div><img src="plots/duration_WIREBONDING_INITIAL_WARM.png"></div>
+      <div class="grid-item"><div class="label">INITIAL WARM → PARYLENE MASKING</div><img src="plots/duration_INITIAL_WARM_PARYLENE_MASKING.png"></div>
+      <div class="grid-item"><div class="label">PARYLENE MASKING → PARYLENE COATING</div><img src="plots/duration_PARYLENE_MASKING_PARYLENE_COATING.png"></div>
+      <div class="grid-item"><div class="label">PARYLENE COATING → PARYLENE UNMASKING</div><img src="plots/duration_PARYLENE_COATING_PARYLENE_UNMASKING.png"></div>
+      <div class="grid-item"><div class="label">PARYLENE UNMASKING → THERMAL CYCLES</div><img src="plots/duration_PARYLENE_UNMASKING_THERMAL_CYCLES.png"></div>
+      <div class="grid-item"><div class="label">THERMAL CYCLES → FINAL WARM</div><img src="plots/duration_THERMAL_CYCLES_FINAL_WARM.png"></div>
+      <div class="grid-item"><div class="label">INITIAL WARM → FINAL WARM</div><img src="plots/duration_INITIAL_WARM_FINAL_WARM.png"></div>
+      <div class="grid-item"><div class="label">FINAL WARM → FINAL COLD</div><img src="plots/duration_FINAL_WARM_FINAL_COLD.png"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentCluster = 'PIXEL_MODULE_JAPAN';
+  let currentClusterTab = 'monthly';
+  let currentCompareTab = 'monthly';
+
+  // ── Mode switching ──────────────────────────────
+  function setMode(mode) {
+    ['overview', 'cluster', 'compare'].forEach(m => {
+      document.getElementById(`mode-${m}`).classList.toggle('hidden', m !== mode);
+    });
+    document.querySelectorAll('.mode-btn').forEach((b, i) => {
+      b.classList.toggle('active', ['overview', 'cluster', 'compare'][i] === mode);
+    });
+  }
+
+  // ── By-Cluster: sub-tab switching ──────────────
+  const clusterTabIds = ['modules', 'completion'];
+
+  function showClusterTab(tab) {
+    clusterTabIds.forEach(t => {
+      document.getElementById(`ct-${t}`).classList.toggle('hidden', t !== tab);
+    });
+    document.querySelectorAll('#cluster-tabs .tab').forEach((b, i) => {
+      b.classList.toggle('active', clusterTabIds[i] === tab);
+    });
+    currentClusterTab = tab;
+  }
+
+  // ── By-Cluster: cluster switching ──────────────
+  function selectCluster(cluster) {
+    currentCluster = cluster;
+    document.querySelectorAll('#cluster-btns .cluster-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.cluster === cluster);
+    });
+    document.getElementById('img-c-monthly').src        = `plots/monthly_modules_${cluster}.png`;
+    document.getElementById('img-c-cumulative').src     = `plots/cumulative_pipeline_${cluster}.png`;
+    document.getElementById('img-c-summary-short').src  = `plots/stage_duration_summary_short_${cluster}.png`;
+    document.getElementById('img-c-batch').src          = `plots/batch_duration_${cluster}.png`;
+  }
+
+  // ── Compare: sub-tab switching ──────────────────
+  const compareTabIds = ['monthly', 'histograms'];
+
+  function showCompareTab(tab) {
+    compareTabIds.forEach(t => {
+      document.getElementById(`cmp-${t}`).classList.toggle('hidden', t !== tab);
+    });
+    document.querySelectorAll('#compare-tabs .tab').forEach((b, i) => {
+      b.classList.toggle('active', compareTabIds[i] === tab);
+    });
+    currentCompareTab = tab;
+  }
+</script>
+
+</body>
+</html>

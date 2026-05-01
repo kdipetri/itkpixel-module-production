@@ -1,0 +1,7 @@
+{
+  "description": "Japan-assembled modules reclassified per-module to CERN-JAPAN if they were shipped to CERN before completing QC. Modules shipped to CERN only after reaching a completion stage (e.g. MODULE/COMPLETE) are kept as Japan.",
+  "cluster_code": "PIXEL_MODULE_CERN_JAPAN",
+  "source_cluster": "PIXEL_MODULE_JAPAN",
+  "cern_cluster": "PIXEL_MODULE_CERN",
+  "completion_stages": ["MODULE/COMPLETE", "MODULE/FINAL_COLD"]
+}

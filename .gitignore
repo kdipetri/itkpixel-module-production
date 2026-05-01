@@ -1,0 +1,29 @@
+# generated plots
+plots/
+
+# local data files (large parquets, not for version control)
+data/
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# reports / scratch
+japan_missing_assembly.txt
+
+# Claude Code local settings
+.claude/
+
+# local documents
+*.pdf
+
+# macOS
+.DS_Store
+
+# SSH multiplexing sockets
+/tmp/ssh-mux-*
