@@ -8,31 +8,20 @@
     body { font-family: sans-serif; background: #f0f2f5; color: #333; padding: 24px; }
     h1 { font-size: 1.5rem; margin-bottom: 20px; color: #1a1a2e; }
 
-    /* ── Mode bar (top-level navigation) ── */
-    .mode-bar { display: flex; gap: 10px; margin-bottom: 18px; }
-    .mode-btn {
-      padding: 10px 24px; cursor: pointer;
-      background: #dde3ec; border: none; border-radius: 8px;
-      font-size: 15px; font-weight: 600;
-      transition: background 0.15s;
-    }
-    .mode-btn:hover { background: #c5cfe0; }
-    .mode-btn.active { background: #1a4fa0; color: white; }
-
-    /* ── Cluster bar ── */
+    /* ── Top-level cluster bar ── */
     .cluster-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
     .cluster-btn {
-      padding: 6px 14px; cursor: pointer; background: #eaecf0;
-      border: 1px solid #ccc; border-radius: 5px; font-size: 13px;
+      padding: 8px 18px; cursor: pointer; background: #dde3ec;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
       transition: background 0.15s;
     }
-    .cluster-btn:hover { background: #d5dae4; }
-    .cluster-btn.active { background: #1e4fa0; color: white; border-color: #1e4fa0; }
+    .cluster-btn:hover { background: #c5cfe0; }
+    .cluster-btn.active { background: #1a4fa0; color: white; }
 
-    /* ── Sub-tab bar ── */
+    /* ── Tab bars ── */
     .tab-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
     .tab {
-      padding: 7px 16px; cursor: pointer; background: #dde3ec;
+      padding: 7px 18px; cursor: pointer; background: #dde3ec;
       border: none; border-radius: 6px; font-size: 13px; font-weight: 500;
       transition: background 0.15s;
     }
@@ -53,6 +42,21 @@
 
     .divider { height: 1px; background: #dde3ec; margin: 6px 0 18px; }
 
+    /* ── Inventory table ── */
+    .inv-wrap { overflow-x: auto; }
+    .inv-table { border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+    .inv-table th, .inv-table td { padding: 6px 14px; border: 1px solid #d0d5de; }
+    .inv-table thead th { background: #1a4fa0; color: white; text-align: center; font-weight: 600; }
+    .inv-table thead th:first-child { text-align: left; }
+    .inv-table tbody tr:nth-child(even) { background: #f7f9fc; }
+    .inv-table tbody tr:hover { background: #e8eef8; }
+    .inv-table tbody td { text-align: right; }
+    .inv-table tbody td:first-child { text-align: left; font-weight: 500; }
+    .inv-table .col-total { background: #eef2fb; font-weight: 600; }
+    .inv-table tfoot td { background: #dde3ec; font-weight: 600; text-align: right; border-top: 2px solid #aab4c8; }
+    .inv-table tfoot td:first-child { text-align: left; }
+    .inv-table td.zero { color: #bbb; }
+
     .hidden { display: none; }
   </style>
 </head>
@@ -60,160 +64,371 @@
 
 <h1>ITk Pixel Module Production</h1>
 
-<!-- ── Top-level mode selector ── -->
-<div class="mode-bar">
-  <button class="mode-btn active" onclick="setMode('overview')">Production Overview</button>
-  <button class="mode-btn" onclick="setMode('cluster')">By Cluster</button>
-  <button class="mode-btn" onclick="setMode('compare')">Compare Clusters</button>
+<!-- ── Top-level: cluster selector ── -->
+<div class="cluster-bar" id="top-cluster-btns">
+  <button class="cluster-btn active" data-cluster="ALL"                      onclick="selectTopCluster('ALL')">All Quad Clusters</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_JAPAN"              onclick="selectTopCluster('PIXEL_MODULE_JAPAN')">Japan</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_CERN_JAPAN"         onclick="selectTopCluster('PIXEL_MODULE_CERN_JAPAN')">Japan-CERN</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_FRANCE"             onclick="selectTopCluster('PIXEL_MODULE_FRANCE')">France</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_GERMANY_BMBF"       onclick="selectTopCluster('PIXEL_MODULE_GERMANY_BMBF')">Germany BMBF</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_GERMANY_MPI"        onclick="selectTopCluster('PIXEL_MODULE_GERMANY_MPI')">Germany MPI</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_UK"                 onclick="selectTopCluster('PIXEL_MODULE_UK')">UK</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_USA"                onclick="selectTopCluster('PIXEL_MODULE_USA')">USA</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_ITALY"              onclick="selectTopCluster('PIXEL_MODULE_ITALY')">Italy</button>
+  <button class="cluster-btn" data-cluster="PIXEL_MODULE_CERN"               onclick="selectTopCluster('PIXEL_MODULE_CERN')">CERN</button>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── Second level: main tabs ── -->
+<div class="tab-bar" id="main-tabs">
+  <button class="tab active" onclick="showMainTab('modules')">Number of Modules</button>
+  <button class="tab"        onclick="showMainTab('inventory')">Inventory</button>
+  <button class="tab"        onclick="showMainTab('completion')">Time to Completion</button>
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     MODE: Overview
+     MAIN PANEL: Number of Modules
      ═══════════════════════════════════════════════ -->
-<div id="mode-overview">
+<div id="panel-modules">
   <div class="overview-grid">
     <div class="panel">
-      <img src="plots/monthly_modules.png" alt="Monthly production — all clusters">
+      <img id="img-monthly" src="plots/monthly_modules.png" alt="Monthly production">
     </div>
     <div class="panel">
-      <img src="plots/cumulative_pipeline.png" alt="Cumulative assembled modules — all clusters">
+      <img id="img-cumulative" src="plots/cumulative_pipeline.png" alt="Cumulative pipeline">
     </div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     MODE: By Cluster
+     MAIN PANEL: Inventory
      ═══════════════════════════════════════════════ -->
-<div id="mode-cluster" class="hidden">
+<div id="panel-inventory" class="hidden">
 
-  <div class="cluster-bar" id="cluster-btns">
-    <button class="cluster-btn active" data-cluster="PIXEL_MODULE_JAPAN" onclick="selectCluster('PIXEL_MODULE_JAPAN')">Japan</button>
-    <button class="cluster-btn" data-cluster="PIXEL_MODULE_CERN_JAPAN" onclick="selectCluster('PIXEL_MODULE_CERN_JAPAN')">CERN–Japan</button>
-    <button class="cluster-btn" data-cluster="PIXEL_MODULE_FRANCE" onclick="selectCluster('PIXEL_MODULE_FRANCE')">France</button>
-    <button class="cluster-btn" data-cluster="PIXEL_MODULE_GERMANY_BMBF" onclick="selectCluster('PIXEL_MODULE_GERMANY_BMBF')">Germany BMBF</button>
-    <button class="cluster-btn" data-cluster="PIXEL_MODULE_GERMANY_MPI" onclick="selectCluster('PIXEL_MODULE_GERMANY_MPI')">Germany MPI</button>
-    <button class="cluster-btn" data-cluster="PIXEL_MODULE_UK" onclick="selectCluster('PIXEL_MODULE_UK')">UK</button>
-    <button class="cluster-btn" data-cluster="PIXEL_MODULE_USA" onclick="selectCluster('PIXEL_MODULE_USA')">USA</button>
-    <button class="cluster-btn" data-cluster="PIXEL_MODULE_ITALY" onclick="selectCluster('PIXEL_MODULE_ITALY')">Italy</button>
-    <button class="cluster-btn" data-cluster="PIXEL_MODULE_CERN" onclick="selectCluster('PIXEL_MODULE_CERN')">CERN</button>
+  <!-- Third level: inventory sub-tabs -->
+  <div class="tab-bar" id="inv-tabs">
+    <button class="tab active" onclick="showInvTab('summary')">Location Summary</button>
+    <button class="tab"        onclick="showInvTab('batch')">Batch Inventory</button>
   </div>
 
-  <div class="divider"></div>
-
-  <div class="tab-bar" id="cluster-tabs">
-    <button class="tab active" onclick="showClusterTab('modules')">Number of Modules</button>
-    <button class="tab" onclick="showClusterTab('completion')">Time to Completion</button>
-  </div>
-
-  <div id="ct-modules">
-    <div class="overview-grid">
-      <div class="panel">
-        <img id="img-c-monthly" src="plots/monthly_modules_PIXEL_MODULE_JAPAN.png" alt="Monthly">
-      </div>
-      <div class="panel">
-        <img id="img-c-cumulative" src="plots/cumulative_pipeline_PIXEL_MODULE_JAPAN.png" alt="Cumulative pipeline">
+  <!-- ── Stage Summary: always shows all-clusters table ── -->
+  <div id="inv-summary">
+    <div class="panel" id="summary-all">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current pipeline stage for each Quad module (most advanced completed stage).
+      </p>
+      <div class="inv-wrap">
+<!-- INV-TABLE-START -->
+<table class="inv-table"><thead><tr><th>Cluster</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>Japan</td><td>280</td><td>162</td><td>100</td><td>173</td><td>179</td><td>4</td><td>69</td><td>409</td><td>570</td><td>78</td><td>14</td><td class="col-total">1596</td></tr><tr><td>CERN–Japan</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td>4</td><td>1</td><td>1</td><td>7</td><td>78</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">94</td></tr><tr><td>France</td><td>114</td><td>96</td><td>57</td><td>14</td><td>136</td><td>2</td><td>13</td><td>54</td><td>141</td><td>25</td><td>28</td><td class="col-total">470</td></tr><tr><td>Germany BMBF</td><td>273</td><td>110</td><td>118</td><td>51</td><td>117</td><td>1</td><td>14</td><td>20</td><td>52</td><td>11</td><td>26</td><td class="col-total">410</td></tr><tr><td>Germany MPI</td><td>24</td><td>12</td><td>6</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>27</td><td>15</td><td>22</td><td>3</td><td class="col-total">79</td></tr><tr><td>UK</td><td>350</td><td>158</td><td>23</td><td>34</td><td>18</td><td class="zero">0</td><td>40</td><td>48</td><td>51</td><td>37</td><td>30</td><td class="col-total">281</td></tr><tr><td>USA</td><td class="zero">0</td><td>36</td><td>37</td><td>52</td><td>54</td><td class="zero">0</td><td>24</td><td>15</td><td>5</td><td>26</td><td>18</td><td class="col-total">231</td></tr><tr><td>Italy</td><td>27</td><td>10</td><td>21</td><td>23</td><td>19</td><td class="zero">0</td><td>12</td><td>85</td><td class="zero">0</td><td>6</td><td>16</td><td class="col-total">182</td></tr><tr><td>CERN</td><td>160</td><td>42</td><td>14</td><td>62</td><td>1</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td>12</td><td>20</td><td class="col-total">124</td></tr></tbody><tfoot><tr><td>Total</td><td>1228</td><td>626</td><td>379</td><td>415</td><td>528</td><td>11</td><td>173</td><td>665</td><td>924</td><td>217</td><td>155</td><td class="col-total">3467</td></tr></tfoot></table>
+<!-- INV-TABLE-END -->
       </div>
     </div>
-  </div>
 
-  <div id="ct-completion" class="hidden">
+  <!-- Location Summary panels (per-cluster) -->
+    <div id="loc-summary-PIXEL_MODULE_JAPAN" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — Japan
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_JAPAN-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>CERN</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>120</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">122</td></tr><tr><td>HR</td><td>106</td><td>57</td><td>100</td><td>173</td><td>179</td><td>4</td><td>69</td><td>407</td><td>450</td><td>78</td><td>14</td><td class="col-total">1474</td></tr><tr><td>KEK</td><td>174</td><td>105</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total zero">0</td></tr></tbody><tfoot><tr><td>Total</td><td>280</td><td>162</td><td>100</td><td>173</td><td>179</td><td>4</td><td>69</td><td>409</td><td>570</td><td>78</td><td>14</td><td class="col-total">1596</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_JAPAN-END -->
+      </div>
+    </div>
+
+    <div id="loc-summary-PIXEL_MODULE_CERN_JAPAN" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — CERN–Japan
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_CERN_JAPAN-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>CERN</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td>3</td><td>1</td><td>1</td><td>7</td><td>78</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">93</td></tr><tr><td>GOETTINGEN</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">1</td></tr></tbody><tfoot><tr><td>Total</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td>4</td><td>1</td><td>1</td><td>7</td><td>78</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">94</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_CERN_JAPAN-END -->
+      </div>
+    </div>
+
+    <div id="loc-summary-PIXEL_MODULE_FRANCE" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — France
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_FRANCE-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>APS</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>27</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">27</td></tr><tr><td>CERN</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total zero">0</td></tr><tr><td>CPPM</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>21</td><td class="zero">0</td><td>1</td><td class="col-total">22</td></tr><tr><td>IJCLAB</td><td>25</td><td>71</td><td>7</td><td>5</td><td>45</td><td class="zero">0</td><td>9</td><td>2</td><td>59</td><td class="zero">0</td><td>7</td><td class="col-total">134</td></tr><tr><td>IRFU</td><td>30</td><td class="zero">0</td><td>20</td><td>1</td><td>52</td><td>1</td><td class="zero">0</td><td>20</td><td>43</td><td>3</td><td>6</td><td class="col-total">146</td></tr><tr><td>LBNL_PIXEL_MODULES</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>3</td><td>1</td><td class="col-total">6</td></tr><tr><td>LPNHE</td><td>56</td><td>25</td><td>30</td><td>8</td><td>12</td><td>1</td><td>4</td><td>32</td><td>10</td><td>19</td><td>5</td><td class="col-total">121</td></tr><tr><td>LPSC</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td class="zero">0</td><td>8</td><td class="col-total">14</td></tr></tbody><tfoot><tr><td>Total</td><td>114</td><td>96</td><td>57</td><td>14</td><td>136</td><td>2</td><td>13</td><td>54</td><td>141</td><td>25</td><td>28</td><td class="col-total">470</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_FRANCE-END -->
+      </div>
+    </div>
+
+    <div id="loc-summary-PIXEL_MODULE_GERMANY_BMBF" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — Germany BMBF
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_GERMANY_BMBF-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>BONN</td><td>123</td><td>104</td><td>106</td><td>39</td><td>18</td><td class="zero">0</td><td>1</td><td>5</td><td class="zero">0</td><td>4</td><td>23</td><td class="col-total">196</td></tr><tr><td>BUW</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">8</td></tr><tr><td>CERN</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="col-total">2</td></tr><tr><td>GOETTINGEN</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>50</td><td class="zero">0</td><td>11</td><td>10</td><td>13</td><td>4</td><td>3</td><td class="col-total">91</td></tr><tr><td>SIEGEN</td><td>150</td><td>6</td><td>12</td><td>12</td><td>49</td><td>1</td><td>2</td><td>5</td><td>31</td><td>1</td><td class="zero">0</td><td class="col-total">113</td></tr></tbody><tfoot><tr><td>Total</td><td>273</td><td>110</td><td>118</td><td>51</td><td>117</td><td>1</td><td>14</td><td>20</td><td>52</td><td>11</td><td>26</td><td class="col-total">410</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_GERMANY_BMBF-END -->
+      </div>
+    </div>
+
+    <div id="loc-summary-PIXEL_MODULE_GERMANY_MPI" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — Germany MPI
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_GERMANY_MPI-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>CERN_TRANSIT</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">4</td></tr><tr><td>MPP</td><td>24</td><td>12</td><td>6</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>27</td><td>6</td><td>22</td><td>3</td><td class="col-total">70</td></tr><tr><td>SLAC</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">5</td></tr></tbody><tfoot><tr><td>Total</td><td>24</td><td>12</td><td>6</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>27</td><td>15</td><td>22</td><td>3</td><td class="col-total">79</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_GERMANY_MPI-END -->
+      </div>
+    </div>
+
+    <div id="loc-summary-PIXEL_MODULE_UK" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — UK
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_UK-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>EDI</td><td>87</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total zero">0</td></tr><tr><td>GL</td><td>65</td><td>23</td><td>10</td><td>19</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>5</td><td>17</td><td>4</td><td>16</td><td class="col-total">75</td></tr><tr><td>LIV</td><td>60</td><td>37</td><td>12</td><td>12</td><td>11</td><td class="zero">0</td><td>36</td><td>31</td><td>8</td><td>21</td><td>14</td><td class="col-total">145</td></tr><tr><td>OX</td><td>138</td><td>98</td><td>1</td><td>3</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td>8</td><td>12</td><td class="zero">0</td><td class="col-total">43</td></tr><tr><td>RAL</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>18</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">18</td></tr></tbody><tfoot><tr><td>Total</td><td>350</td><td>158</td><td>23</td><td>34</td><td>18</td><td class="zero">0</td><td>40</td><td>48</td><td>51</td><td>37</td><td>30</td><td class="col-total">281</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_UK-END -->
+      </div>
+    </div>
+
+    <div id="loc-summary-PIXEL_MODULE_USA" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — USA
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_USA-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>ANL</td><td class="zero">0</td><td>36</td><td>37</td><td>50</td><td>49</td><td class="zero">0</td><td>3</td><td>3</td><td>4</td><td>24</td><td>18</td><td class="col-total">188</td></tr><tr><td>LBNL_PIXEL_MODULES</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>1</td><td class="zero">0</td><td>15</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">18</td></tr><tr><td>UCSC</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="zero">0</td><td>6</td><td>12</td><td>1</td><td>2</td><td class="zero">0</td><td class="col-total">25</td></tr></tbody><tfoot><tr><td>Total</td><td class="zero">0</td><td>36</td><td>37</td><td>52</td><td>54</td><td class="zero">0</td><td>24</td><td>15</td><td>5</td><td>26</td><td>18</td><td class="col-total">231</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_USA-END -->
+      </div>
+    </div>
+
+    <div id="loc-summary-PIXEL_MODULE_ITALY" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — Italy
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_ITALY-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>INFN_BOLOGNA</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>9</td><td class="zero">0</td><td>6</td><td>70</td><td class="zero">0</td><td>2</td><td>2</td><td class="col-total">89</td></tr><tr><td>INFN_GENOA</td><td>17</td><td>9</td><td>19</td><td>15</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">47</td></tr><tr><td>INFN_MILANO</td><td>10</td><td>1</td><td>6</td><td>18</td><td>10</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>13</td><td class="col-total">51</td></tr><tr><td>INFN_TRENTO</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>4</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">5</td></tr><tr><td>INFN_UDINE</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>15</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="col-total">21</td></tr></tbody><tfoot><tr><td>Total</td><td>27</td><td>10</td><td>25</td><td>33</td><td>19</td><td class="zero">0</td><td>25</td><td>89</td><td class="zero">0</td><td>6</td><td>16</td><td class="col-total">213</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_ITALY-END -->
+      </div>
+    </div>
+
+    <div id="loc-summary-PIXEL_MODULE_CERN" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Current location of modules — CERN
+      </p>
+      <div class="inv-wrap">
+<!-- LOC-TABLE-PIXEL_MODULE_CERN-START -->
+<table class="inv-table"><thead><tr><th>Location</th><th>Unasm. Flex</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>CERN</td><td>160</td><td>42</td><td>14</td><td>62</td><td>1</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td>12</td><td>20</td><td class="col-total">124</td></tr></tbody><tfoot><tr><td>Total</td><td>160</td><td>42</td><td>14</td><td>62</td><td>1</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td>12</td><td>20</td><td class="col-total">124</td></tr></tfoot></table>
+<!-- LOC-TABLE-PIXEL_MODULE_CERN-END -->
+      </div>
+    </div>
+
+  </div><!-- end inv-summary -->
+
+  <!-- ── Batch Inventory ── -->
+  <div id="inv-batch" class="hidden">
+
+    <!-- All-clusters batch table (shown in ALL mode) -->
+    <div id="all-batches-panel" class="panel">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        Bare module batches — all clusters combined.
+      </p>
+      <div class="inv-wrap">
+<!-- ALL-BATCH-TABLE-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>HPK 20</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">8</td></tr><tr><td>HPK 21</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">3</td></tr><tr><td>HPK 22</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">6</td></tr><tr><td>HPK 23</td><td class="zero">0</td><td>4</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">10</td></tr><tr><td>IZM 7 (Jan 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>7</td><td class="zero">0</td><td>3</td><td class="col-total">10</td></tr><tr><td>IZM 8 (Jan 2025)</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">2</td></tr><tr><td>HPK 24</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td>10</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">16</td></tr><tr><td>HPK 25</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>1</td><td>5</td><td>20</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">28</td></tr><tr><td>HPK 26</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>17</td><td>15</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">32</td></tr><tr><td>HPK 27</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>12</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">16</td></tr><tr><td>HPK 28</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>7</td><td>11</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">18</td></tr><tr><td>HPK 29</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>11</td><td>30</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">41</td></tr><tr><td>IZM 10 (Feb 2025)</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>4</td><td class="zero">0</td><td>1</td><td class="col-total">9</td></tr><tr><td>HPK 30</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>11</td><td>14</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">25</td></tr><tr><td>HPK 31</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>14</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">14</td></tr><tr><td>IZM 11 (Mar 2025)</td><td class="zero">0</td><td>3</td><td>2</td><td>4</td><td class="zero">0</td><td>8</td><td>9</td><td>20</td><td>4</td><td>6</td><td class="col-total">56</td></tr><tr><td>Advafab (Mar 2025)</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>IZM 12 (Mar/Apr 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>1</td><td>1</td><td>12</td><td>17</td><td>11</td><td>23</td><td class="col-total">67</td></tr><tr><td>HPK 32</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>18</td><td>15</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">34</td></tr><tr><td>HPK 33</td><td class="zero">0</td><td>1</td><td>1</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>16</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">21</td></tr><tr><td>HPK 34</td><td>1</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>17</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">21</td></tr><tr><td>IZM 13 (Apr 2025)</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>5</td><td>6</td><td>4</td><td>3</td><td class="col-total">21</td></tr><tr><td>HPK 35</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>13</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">15</td></tr><tr><td>IZM 14 (May 2025)</td><td>1</td><td class="zero">0</td><td>4</td><td>2</td><td class="zero">0</td><td>6</td><td>15</td><td>32</td><td>13</td><td>11</td><td class="col-total">84</td></tr><tr><td>HPK 36</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>10</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">15</td></tr><tr><td>HPK 37</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>16</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">16</td></tr><tr><td>HPK 38</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>20</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">23</td></tr><tr><td>IZM 15 (Jun 2025)</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>8</td><td>1</td><td>1</td><td>23</td><td>30</td><td>11</td><td>13</td><td class="col-total">90</td></tr><tr><td>HPK 39</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>22</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">24</td></tr><tr><td>Advafab 1 (Jun/Jul 2025)</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td>1</td><td>1</td><td class="zero">0</td><td>7</td><td>21</td><td>10</td><td>4</td><td class="col-total">50</td></tr><tr><td>HPK 40</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>4</td><td>23</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">32</td></tr><tr><td>HPK 41</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>14</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">20</td></tr><tr><td>HPK 42</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td>2</td><td>1</td><td>8</td><td>23</td><td>3</td><td>3</td><td class="zero">0</td><td class="col-total">45</td></tr><tr><td>HPK 43</td><td class="zero">0</td><td>4</td><td>2</td><td>7</td><td class="zero">0</td><td>11</td><td>34</td><td>4</td><td>1</td><td class="zero">0</td><td class="col-total">63</td></tr><tr><td>HPK 44</td><td>1</td><td>9</td><td>11</td><td>5</td><td class="zero">0</td><td>19</td><td>29</td><td>23</td><td>13</td><td class="zero">0</td><td class="col-total">110</td></tr><tr><td>IZM 16 (Jul 2025)</td><td class="zero">0</td><td>1</td><td>5</td><td>13</td><td>1</td><td>7</td><td>10</td><td>7</td><td>4</td><td>5</td><td class="col-total">53</td></tr><tr><td>Advafab 2 (Jul/Aug 2025)</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td>6</td><td>23</td><td>48</td><td>11</td><td>5</td><td class="col-total">96</td></tr><tr><td>HPK 45</td><td class="zero">0</td><td>5</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>13</td><td>32</td><td>6</td><td class="zero">0</td><td class="col-total">64</td></tr><tr><td>Advafab 3 (Sep 2025)</td><td class="zero">0</td><td>2</td><td>15</td><td>15</td><td class="zero">0</td><td>17</td><td>16</td><td>16</td><td>8</td><td>11</td><td class="col-total">100</td></tr><tr><td>HPK 46</td><td class="zero">0</td><td>5</td><td>7</td><td>1</td><td class="zero">0</td><td>5</td><td>9</td><td>67</td><td>21</td><td class="zero">0</td><td class="col-total">115</td></tr><tr><td>HPK 47</td><td class="zero">0</td><td>4</td><td>8</td><td>7</td><td class="zero">0</td><td>19</td><td>38</td><td>141</td><td>13</td><td>1</td><td class="col-total">231</td></tr><tr><td>IZM 17 (Sep 2025)</td><td>9</td><td>1</td><td>11</td><td>18</td><td class="zero">0</td><td>2</td><td>4</td><td>17</td><td>17</td><td>7</td><td class="col-total">86</td></tr><tr><td>Advafab 4 (Oct 2025)</td><td>13</td><td>3</td><td>4</td><td>16</td><td class="zero">0</td><td>17</td><td>15</td><td>9</td><td>8</td><td>12</td><td class="col-total">97</td></tr><tr><td>IZM 19 (Oct 2025 with laser pre-grooving)</td><td>2</td><td class="zero">0</td><td>1</td><td>10</td><td class="zero">0</td><td>2</td><td>5</td><td>2</td><td class="zero">0</td><td>5</td><td class="col-total">27</td></tr><tr><td>IZM 18 (Oct 2025)</td><td>2</td><td class="zero">0</td><td>11</td><td>30</td><td class="zero">0</td><td>1</td><td>2</td><td>6</td><td>6</td><td>3</td><td class="col-total">61</td></tr><tr><td>HPK 48</td><td>4</td><td>4</td><td class="zero">0</td><td>12</td><td class="zero">0</td><td>4</td><td>76</td><td>100</td><td>9</td><td>7</td><td class="col-total">216</td></tr><tr><td>Advafab 5 (Oct/Nov 2025)</td><td class="zero">0</td><td>3</td><td>9</td><td>11</td><td>1</td><td>6</td><td>28</td><td>24</td><td>3</td><td>5</td><td class="col-total">90</td></tr><tr><td>HPK 49</td><td>15</td><td>4</td><td class="zero">0</td><td>9</td><td>1</td><td class="zero">0</td><td>56</td><td>1</td><td>7</td><td>6</td><td class="col-total">99</td></tr><tr><td>IZM 20 (Nov 2025)</td><td>18</td><td>5</td><td>25</td><td>15</td><td class="zero">0</td><td>5</td><td>9</td><td>2</td><td>4</td><td>10</td><td class="col-total">93</td></tr><tr><td>Advafab 6 (Nov/Dec 2025)</td><td class="zero">0</td><td>3</td><td>16</td><td>15</td><td class="zero">0</td><td>4</td><td>14</td><td>5</td><td>3</td><td>2</td><td class="col-total">62</td></tr><tr><td>HPK 50</td><td>1</td><td>9</td><td>12</td><td>26</td><td class="zero">0</td><td class="zero">0</td><td>23</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td class="col-total">74</td></tr><tr><td>HPK 51</td><td>1</td><td>27</td><td>66</td><td>71</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="col-total">167</td></tr><tr><td>IZM 21 (Dec 2025)</td><td>1</td><td>19</td><td>10</td><td>8</td><td class="zero">0</td><td>1</td><td>12</td><td>2</td><td>1</td><td>4</td><td class="col-total">58</td></tr><tr><td>Advafab 6 (Dec 25/Jan 26)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>45</td><td>1</td><td>3</td><td>3</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="col-total">54</td></tr><tr><td>HPK 52</td><td>35</td><td>20</td><td>43</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">98</td></tr><tr><td>HPK 53</td><td class="zero">0</td><td>5</td><td>1</td><td>22</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">30</td></tr><tr><td>IZM 22 (Jan 2026)</td><td>2</td><td>16</td><td class="zero">0</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td class="zero">0</td><td>5</td><td>2</td><td class="col-total">44</td></tr><tr><td>Advafab 7 (Jan/Feb 26)</td><td>37</td><td>35</td><td>43</td><td>42</td><td class="zero">0</td><td>10</td><td>17</td><td>1</td><td>12</td><td>3</td><td class="col-total">200</td></tr><tr><td>HPK-HPK CERN order 1</td><td class="zero">0</td><td>2</td><td>12</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>1</td><td class="col-total">17</td></tr><tr><td>IZM 23 (Feb 2026)</td><td>1</td><td>25</td><td>2</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">36</td></tr><tr><td>HPK-HPK CERN order 2</td><td>68</td><td>40</td><td>16</td><td>21</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">145</td></tr><tr><td>Advafab 8 (Feb 26)</td><td>21</td><td>31</td><td>7</td><td>44</td><td class="zero">0</td><td>5</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">115</td></tr><tr><td>HPK-HPK CERN order 3</td><td>91</td><td>28</td><td>14</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">133</td></tr><tr><td>HPK-HPK CERN order 4</td><td>102</td><td>16</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">126</td></tr><tr><td>IZM 24 (Mar 2026)</td><td>45</td><td>3</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">54</td></tr><tr><td>Advafab 9 (Mar 26)</td><td>38</td><td>22</td><td>2</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">68</td></tr><tr><td>HPK-HPK CERN order 5</td><td>193</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">193</td></tr><tr><td>Advafab 10 (Mar 26)</td><td>24</td><td>17</td><td>6</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">50</td></tr><tr><td>Advafab 11 (new UBM vendor - Apr 26)</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">8</td></tr></tbody><tfoot><tr><td>Total</td><td>747</td><td>379</td><td>415</td><td>528</td><td>11</td><td>173</td><td>665</td><td>924</td><td>217</td><td>155</td><td class="col-total">4214</td></tr></tfoot></table>
+<!-- ALL-BATCH-TABLE-END -->
+      </div>
+    </div>
+
+    <!-- Per-cluster batch tables (shown in specific cluster mode) -->
+    <div id="batch-PIXEL_MODULE_JAPAN" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — Japan</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_JAPAN-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>HPK 20</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">8</td></tr><tr><td>HPK 21</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">3</td></tr><tr><td>HPK 22</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">6</td></tr><tr><td>HPK 23</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">6</td></tr><tr><td>HPK 24</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td>10</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">16</td></tr><tr><td>HPK 25</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td>19</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">25</td></tr><tr><td>HPK 26</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>17</td><td>15</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">32</td></tr><tr><td>HPK 27</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>11</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">15</td></tr><tr><td>HPK 28</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>7</td><td>11</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">18</td></tr><tr><td>HPK 29</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>11</td><td>30</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">41</td></tr><tr><td>HPK 30</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>11</td><td>14</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">25</td></tr><tr><td>HPK 31</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>14</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">14</td></tr><tr><td>HPK 32</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>18</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">27</td></tr><tr><td>HPK 33</td><td class="zero">0</td><td>1</td><td>1</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>16</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">21</td></tr><tr><td>HPK 34</td><td>1</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>13</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">17</td></tr><tr><td>HPK 35</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">2</td></tr><tr><td>HPK 36</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">8</td></tr><tr><td>HPK 37</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>HPK 38</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">12</td></tr><tr><td>HPK 39</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">11</td></tr><tr><td>HPK 40</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>4</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">16</td></tr><tr><td>HPK 41</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">12</td></tr><tr><td>HPK 42</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td>2</td><td>1</td><td>8</td><td>23</td><td>3</td><td>3</td><td class="zero">0</td><td class="col-total">45</td></tr><tr><td>HPK 43</td><td class="zero">0</td><td>4</td><td>2</td><td>7</td><td class="zero">0</td><td>11</td><td>34</td><td>4</td><td>1</td><td class="zero">0</td><td class="col-total">63</td></tr><tr><td>HPK 44</td><td>1</td><td>9</td><td>11</td><td>5</td><td class="zero">0</td><td>19</td><td>29</td><td>23</td><td>13</td><td class="zero">0</td><td class="col-total">110</td></tr><tr><td>HPK 45</td><td class="zero">0</td><td>5</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>13</td><td>32</td><td>6</td><td class="zero">0</td><td class="col-total">64</td></tr><tr><td>HPK 46</td><td class="zero">0</td><td>5</td><td>7</td><td>1</td><td class="zero">0</td><td>5</td><td>9</td><td>67</td><td>21</td><td class="zero">0</td><td class="col-total">115</td></tr><tr><td>HPK 47</td><td class="zero">0</td><td>4</td><td>8</td><td>7</td><td class="zero">0</td><td>19</td><td>38</td><td>141</td><td>13</td><td>1</td><td class="col-total">231</td></tr><tr><td>HPK 48</td><td>4</td><td>4</td><td class="zero">0</td><td>12</td><td class="zero">0</td><td>4</td><td>76</td><td>100</td><td>9</td><td>7</td><td class="col-total">216</td></tr><tr><td>HPK 49</td><td>15</td><td>4</td><td class="zero">0</td><td>9</td><td>1</td><td class="zero">0</td><td>56</td><td>1</td><td>7</td><td>6</td><td class="col-total">99</td></tr><tr><td>HPK 50</td><td>1</td><td>9</td><td>12</td><td>26</td><td class="zero">0</td><td class="zero">0</td><td>23</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td class="col-total">74</td></tr><tr><td>HPK 51</td><td>1</td><td>27</td><td>66</td><td>71</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="col-total">167</td></tr><tr><td>HPK 52</td><td>35</td><td>20</td><td>43</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">98</td></tr><tr><td>HPK 53</td><td class="zero">0</td><td>5</td><td>1</td><td>22</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">30</td></tr><tr><td>HPK-HPK CERN order 5</td><td>89</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">89</td></tr></tbody><tfoot><tr><td>Total</td><td>149</td><td>100</td><td>173</td><td>179</td><td>4</td><td>69</td><td>409</td><td>570</td><td>78</td><td>14</td><td class="col-total">1745</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_JAPAN-END -->
+      </div>
+    </div>
+
+    <div id="batch-PIXEL_MODULE_CERN_JAPAN" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — Japan-CERN</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_CERN_JAPAN-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>HPK 23</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">4</td></tr><tr><td>HPK 25</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>1</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">3</td></tr><tr><td>HPK 27</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">1</td></tr><tr><td>HPK 32</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">7</td></tr><tr><td>HPK 34</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">4</td></tr><tr><td>HPK 35</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">13</td></tr><tr><td>HPK 36</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">7</td></tr><tr><td>HPK 37</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">7</td></tr><tr><td>HPK 38</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>11</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">11</td></tr><tr><td>HPK 39</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>13</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">13</td></tr><tr><td>HPK 40</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>16</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">16</td></tr><tr><td>HPK 41</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">8</td></tr></tbody><tfoot><tr><td>Total</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td>4</td><td>1</td><td>1</td><td>7</td><td>78</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">94</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_CERN_JAPAN-END -->
+      </div>
+    </div>
+
+    <div id="batch-PIXEL_MODULE_FRANCE" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — France</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_FRANCE-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>IZM 7 (Jan 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>7</td><td class="zero">0</td><td>3</td><td class="col-total">10</td></tr><tr><td>IZM 11 (Mar 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td class="zero">0</td><td>3</td><td class="col-total">9</td></tr><tr><td>IZM 12 (Mar/Apr 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>8</td><td>3</td><td>3</td><td class="col-total">15</td></tr><tr><td>IZM 14 (May 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>15</td><td>3</td><td>5</td><td class="col-total">26</td></tr><tr><td>IZM 15 (Jun 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>13</td><td>1</td><td>3</td><td class="col-total">18</td></tr><tr><td>Advafab 1 (Jun/Jul 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td>4</td><td>1</td><td class="col-total">18</td></tr><tr><td>Advafab 2 (Jul/Aug 2025)</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>38</td><td>2</td><td>2</td><td class="col-total">46</td></tr><tr><td>IZM 17 (Sep 2025)</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>13</td><td>4</td><td>1</td><td class="col-total">21</td></tr><tr><td>Advafab 5 (Oct/Nov 2025)</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td>3</td><td>1</td><td>6</td><td>28</td><td>24</td><td>2</td><td>5</td><td class="col-total">71</td></tr><tr><td>Advafab 6 (Nov/Dec 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td>4</td><td>14</td><td>5</td><td class="zero">0</td><td>1</td><td class="col-total">26</td></tr><tr><td>Advafab 6 (Dec 25/Jan 26)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>45</td><td>1</td><td>3</td><td>3</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="col-total">54</td></tr><tr><td>Advafab 7 (Jan/Feb 26)</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>29</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="zero">0</td><td class="col-total">36</td></tr><tr><td>HPK-HPK CERN order 2</td><td>29</td><td>10</td><td>2</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">50</td></tr><tr><td>Advafab 8 (Feb 26)</td><td class="zero">0</td><td>2</td><td>4</td><td>38</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">45</td></tr><tr><td>HPK-HPK CERN order 3</td><td>28</td><td>15</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">44</td></tr><tr><td>Advafab 9 (Mar 26)</td><td>38</td><td>22</td><td>2</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">68</td></tr><tr><td>Advafab 10 (Mar 26)</td><td>1</td><td>5</td><td>1</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">9</td></tr></tbody><tfoot><tr><td>Total</td><td>96</td><td>57</td><td>14</td><td>136</td><td>2</td><td>13</td><td>54</td><td>141</td><td>25</td><td>28</td><td class="col-total">566</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_FRANCE-END -->
+      </div>
+    </div>
+
+    <div id="batch-PIXEL_MODULE_GERMANY_BMBF" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — Germany BMBF</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_GERMANY_BMBF-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>IZM 11 (Mar 2025)</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td>12</td><td>2</td><td>1</td><td class="col-total">18</td></tr><tr><td>IZM 12 (Mar/Apr 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td>4</td><td>2</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>IZM 14 (May 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td>12</td><td>2</td><td>2</td><td class="col-total">18</td></tr><tr><td>IZM 15 (Jun 2025)</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>5</td><td>1</td><td>1</td><td>5</td><td>7</td><td>1</td><td>5</td><td class="col-total">27</td></tr><tr><td>IZM 16 (Jul 2025)</td><td class="zero">0</td><td>1</td><td>1</td><td>8</td><td class="zero">0</td><td>5</td><td>6</td><td>4</td><td class="zero">0</td><td>1</td><td class="col-total">26</td></tr><tr><td>Advafab 3 (Sep 2025)</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>10</td><td class="zero">0</td><td>1</td><td>2</td><td>8</td><td>3</td><td>3</td><td class="col-total">28</td></tr><tr><td>IZM 17 (Sep 2025)</td><td>9</td><td>1</td><td>7</td><td>11</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">29</td></tr><tr><td>IZM 19 (Oct 2025 with laser pre-grooving)</td><td>2</td><td class="zero">0</td><td>1</td><td>10</td><td class="zero">0</td><td>2</td><td>5</td><td>2</td><td class="zero">0</td><td>5</td><td class="col-total">27</td></tr><tr><td>IZM 18 (Oct 2025)</td><td>2</td><td class="zero">0</td><td>2</td><td>30</td><td class="zero">0</td><td>1</td><td>2</td><td>3</td><td>1</td><td>3</td><td class="col-total">44</td></tr><tr><td>IZM 20 (Nov 2025)</td><td>3</td><td>2</td><td>13</td><td>14</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">32</td></tr><tr><td>IZM 21 (Dec 2025)</td><td>1</td><td>18</td><td>10</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="col-total">41</td></tr><tr><td>IZM 22 (Jan 2026)</td><td>2</td><td>16</td><td class="zero">0</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">26</td></tr><tr><td>IZM 23 (Feb 2026)</td><td>1</td><td>25</td><td>2</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">36</td></tr><tr><td>HPK-HPK CERN order 2</td><td>14</td><td>21</td><td>6</td><td>4</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">45</td></tr><tr><td>Advafab 8 (Feb 26)</td><td class="zero">0</td><td>25</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">25</td></tr><tr><td>HPK-HPK CERN order 4</td><td>31</td><td>4</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">35</td></tr><tr><td>IZM 24 (Mar 2026)</td><td>45</td><td>3</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">54</td></tr></tbody><tfoot><tr><td>Total</td><td>110</td><td>118</td><td>51</td><td>117</td><td>1</td><td>14</td><td>20</td><td>52</td><td>11</td><td>26</td><td class="col-total">520</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_GERMANY_BMBF-END -->
+      </div>
+    </div>
+
+    <div id="batch-PIXEL_MODULE_GERMANY_MPI" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — Germany MPI</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_GERMANY_MPI-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>IZM 15 (Jun 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td>4</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>IZM 17 (Sep 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>3</td><td>5</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>IZM 18 (Oct 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>5</td><td class="zero">0</td><td class="col-total">8</td></tr><tr><td>IZM 20 (Nov 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>2</td><td>2</td><td>1</td><td class="col-total">9</td></tr><tr><td>IZM 21 (Dec 2025)</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td>2</td><td>1</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>IZM 22 (Jan 2026)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td class="zero">0</td><td>5</td><td>1</td><td class="col-total">18</td></tr><tr><td>Advafab 8 (Feb 26)</td><td>1</td><td>2</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>HPK-HPK CERN order 4</td><td>11</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">11</td></tr><tr><td>Advafab 10 (Mar 26)</td><td class="zero">0</td><td>3</td><td>5</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">9</td></tr></tbody><tfoot><tr><td>Total</td><td>12</td><td>6</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>27</td><td>15</td><td>22</td><td>3</td><td class="col-total">91</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_GERMANY_MPI-END -->
+      </div>
+    </div>
+
+    <div id="batch-PIXEL_MODULE_UK" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — UK</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_UK-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>IZM 10 (Feb 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>3</td><td class="zero">0</td><td>1</td><td class="col-total">6</td></tr><tr><td>IZM 11 (Mar 2025)</td><td class="zero">0</td><td>1</td><td>2</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>2</td><td>1</td><td class="zero">0</td><td class="col-total">12</td></tr><tr><td>IZM 13 (Apr 2025)</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>4</td><td>1</td><td>1</td><td class="col-total">12</td></tr><tr><td>IZM 14 (May 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td>3</td><td>4</td><td class="zero">0</td><td class="col-total">13</td></tr><tr><td>IZM 15 (Jun 2025)</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td>5</td><td>5</td><td>1</td><td class="col-total">18</td></tr><tr><td>Advafab 1 (Jun/Jul 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>7</td><td>3</td><td>1</td><td class="col-total">14</td></tr><tr><td>Advafab 2 (Jul/Aug 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td>6</td><td>5</td><td>10</td><td>8</td><td>1</td><td class="col-total">32</td></tr><tr><td>Advafab 3 (Sep 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td>1</td><td>6</td><td>1</td><td>4</td><td class="col-total">18</td></tr><tr><td>IZM 17 (Sep 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td>2</td><td>2</td><td>1</td><td>3</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>Advafab 4 (Oct 2025)</td><td>13</td><td>3</td><td>4</td><td>1</td><td class="zero">0</td><td>17</td><td>4</td><td>9</td><td>8</td><td>11</td><td class="col-total">70</td></tr><tr><td>IZM 20 (Nov 2025)</td><td>15</td><td>2</td><td>6</td><td>1</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>7</td><td class="col-total">35</td></tr><tr><td>Advafab 7 (Jan/Feb 26)</td><td>18</td><td>8</td><td>11</td><td>1</td><td class="zero">0</td><td>6</td><td>13</td><td>1</td><td>2</td><td>3</td><td class="col-total">63</td></tr><tr><td>HPK-HPK CERN order 2</td><td>25</td><td>9</td><td>8</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">50</td></tr><tr><td>Advafab 8 (Feb 26)</td><td>18</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">18</td></tr><tr><td>HPK-HPK CERN order 3</td><td>36</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">36</td></tr><tr><td>HPK-HPK CERN order 4</td><td>33</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">33</td></tr></tbody><tfoot><tr><td>Total</td><td>158</td><td>23</td><td>34</td><td>18</td><td class="zero">0</td><td>40</td><td>48</td><td>51</td><td>37</td><td>30</td><td class="col-total">439</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_UK-END -->
+      </div>
+    </div>
+
+    <div id="batch-PIXEL_MODULE_USA" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — USA</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_USA-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>IZM 10 (Feb 2025)</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">3</td></tr><tr><td>IZM 11 (Mar 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td>7</td><td>6</td><td class="zero">0</td><td>1</td><td>2</td><td class="col-total">17</td></tr><tr><td>Advafab (Mar 2025)</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>IZM 13 (Apr 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>1</td><td>2</td><td>3</td><td>2</td><td class="col-total">9</td></tr><tr><td>IZM 14 (May 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="zero">0</td><td>1</td><td>2</td><td>2</td><td class="col-total">9</td></tr><tr><td>Advafab 1 (Jun/Jul 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td>1</td><td>2</td><td>2</td><td class="col-total">9</td></tr><tr><td>IZM 16 (Jul 2025)</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>5</td><td class="zero">0</td><td>2</td><td>4</td><td class="zero">0</td><td>3</td><td>3</td><td class="col-total">18</td></tr><tr><td>Advafab 3 (Sep 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td class="zero">0</td><td>10</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>1</td><td class="col-total">18</td></tr><tr><td>IZM 17 (Sep 2025)</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>5</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td>5</td><td class="col-total">18</td></tr><tr><td>Advafab 4 (Oct 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>10</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">10</td></tr><tr><td>Advafab 5 (Oct/Nov 2025)</td><td class="zero">0</td><td>1</td><td>1</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">10</td></tr><tr><td>Advafab 6 (Nov/Dec 2025)</td><td class="zero">0</td><td>3</td><td>16</td><td>13</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>1</td><td class="col-total">36</td></tr><tr><td>Advafab 7 (Jan/Feb 26)</td><td class="zero">0</td><td>24</td><td>29</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td class="zero">0</td><td class="col-total">65</td></tr><tr><td>HPK-HPK CERN order 3</td><td>27</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">36</td></tr></tbody><tfoot><tr><td>Total</td><td>36</td><td>37</td><td>52</td><td>54</td><td class="zero">0</td><td>24</td><td>15</td><td>5</td><td>26</td><td>18</td><td class="col-total">267</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_USA-END -->
+      </div>
+    </div>
+
+    <div id="batch-PIXEL_MODULE_ITALY" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — Italy</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_ITALY-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>IZM 12 (Mar/Apr 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>11</td><td class="zero">0</td><td>1</td><td>4</td><td class="col-total">16</td></tr><tr><td>IZM 14 (May 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>7</td><td class="zero">0</td><td>1</td><td>1</td><td class="col-total">9</td></tr><tr><td>IZM 15 (Jun 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td>11</td><td class="zero">0</td><td class="zero">0</td><td>4</td><td class="col-total">18</td></tr><tr><td>Advafab 2 (Jul/Aug 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>15</td><td class="zero">0</td><td>1</td><td>2</td><td class="col-total">18</td></tr><tr><td>Advafab 3 (Sep 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>13</td><td class="zero">0</td><td>2</td><td>3</td><td class="col-total">18</td></tr><tr><td>Advafab 4 (Oct 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td class="zero">0</td><td class="zero">0</td><td>11</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">17</td></tr><tr><td>IZM 20 (Nov 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>5</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="col-total">8</td></tr><tr><td>IZM 21 (Dec 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>7</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">8</td></tr><tr><td>Advafab 7 (Jan/Feb 26)</td><td>1</td><td>3</td><td class="zero">0</td><td>5</td><td class="zero">0</td><td>4</td><td>4</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="col-total">18</td></tr><tr><td>Advafab 8 (Feb 26)</td><td>2</td><td>2</td><td>2</td><td>6</td><td class="zero">0</td><td>5</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">18</td></tr><tr><td>HPK-HPK CERN order 3</td><td class="zero">0</td><td>4</td><td>13</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">17</td></tr><tr><td>HPK-HPK CERN order 4</td><td>7</td><td>12</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">27</td></tr></tbody><tfoot><tr><td>Total</td><td>10</td><td>21</td><td>23</td><td>19</td><td class="zero">0</td><td>12</td><td>85</td><td class="zero">0</td><td>6</td><td>16</td><td class="col-total">192</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_ITALY-END -->
+      </div>
+    </div>
+
+    <div id="batch-PIXEL_MODULE_CERN" class="panel hidden">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">Bare module batches — CERN</p>
+      <div class="inv-wrap">
+<!-- BATCH-TABLE-PIXEL_MODULE_CERN-START -->
+<table class="inv-table"><thead><tr><th>Batch</th><th>Unasm. BM</th><th>ASSEMBLY</th><th>INITIAL_WARM</th><th>PARYLENE</th><th>OBWP</th><th>THERMAL_CYCLES</th><th>FINAL_QC</th><th>COMPLETE</th><th>UNHAPPY</th><th>GRAVEYARD</th><th>Total</th></tr></thead><tbody><tr><td>IZM 12 (Mar/Apr 2025)</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td>5</td><td>5</td><td>16</td><td class="col-total">27</td></tr><tr><td>IZM 14 (May 2025)</td><td>1</td><td class="zero">0</td><td>4</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>1</td><td>1</td><td class="col-total">9</td></tr><tr><td>Advafab 1 (Jun/Jul 2025)</td><td class="zero">0</td><td class="zero">0</td><td>6</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>1</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>IZM 16 (Jul 2025)</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="zero">0</td><td>3</td><td>1</td><td>1</td><td class="col-total">9</td></tr><tr><td>Advafab 3 (Sep 2025)</td><td class="zero">0</td><td>2</td><td>14</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">18</td></tr><tr><td>IZM 18 (Oct 2025)</td><td class="zero">0</td><td class="zero">0</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>Advafab 5 (Oct/Nov 2025)</td><td class="zero">0</td><td class="zero">0</td><td>8</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td class="zero">0</td><td class="col-total">9</td></tr><tr><td>IZM 20 (Nov 2025)</td><td class="zero">0</td><td>1</td><td>6</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>1</td><td>1</td><td class="col-total">9</td></tr><tr><td>Advafab 7 (Jan/Feb 26)</td><td>18</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">18</td></tr><tr><td>HPK-HPK CERN order 1</td><td class="zero">0</td><td>2</td><td>12</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td>2</td><td>1</td><td class="col-total">17</td></tr><tr><td>Advafab 10 (Mar 26)</td><td>23</td><td>9</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="zero">0</td><td class="col-total">32</td></tr></tbody><tfoot><tr><td>Total</td><td>42</td><td>14</td><td>62</td><td>1</td><td>3</td><td class="zero">0</td><td class="zero">0</td><td>12</td><td>12</td><td>20</td><td class="col-total">166</td></tr></tfoot></table>
+<!-- BATCH-TABLE-PIXEL_MODULE_CERN-END -->
+      </div>
+    </div>
+
+  </div><!-- end inv-batch -->
+
+</div><!-- end panel-inventory -->
+
+<!-- ═══════════════════════════════════════════════
+     MAIN PANEL: Time to Completion
+     ═══════════════════════════════════════════════ -->
+<div id="panel-completion" class="hidden">
+
+  <!-- All Quad Clusters: simplified stage durations + per-batch duration -->
+  <div id="completion-all">
     <div class="two-col">
       <div class="panel">
-        <img id="img-c-summary-short" src="plots/stage_duration_summary_short_PIXEL_MODULE_JAPAN.png" alt="Stage duration summary">
+        <img src="plots/stage_duration_summary_short_ALL.png" alt="Stage duration summary — all clusters">
       </div>
       <div class="panel">
-        <img id="img-c-batch" src="plots/batch_duration_PIXEL_MODULE_JAPAN.png" alt="Batch duration">
+        <img src="plots/batch_duration_ALL.png" alt="Batch duration — all clusters">
       </div>
     </div>
   </div>
 
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     MODE: Compare Clusters
-     ═══════════════════════════════════════════════ -->
-<div id="mode-compare" class="hidden">
-
-  <div class="tab-bar" id="compare-tabs">
-    <button class="tab active" onclick="showCompareTab('monthly')">Monthly Production</button>
-    <button class="tab" onclick="showCompareTab('histograms')">Stage Duration Histograms</button>
-  </div>
-
-  <div id="cmp-monthly">
-    <div class="panel">
-      <img src="plots/monthly_modules.png" alt="Monthly production — all clusters">
+  <!-- Specific cluster: summary + batch duration -->
+  <div id="completion-cluster" class="hidden">
+    <div class="two-col">
+      <div class="panel">
+        <img id="img-summary-short" src="" alt="Stage duration summary">
+      </div>
+      <div class="panel">
+        <img id="img-batch-dur" src="" alt="Batch duration">
+      </div>
     </div>
   </div>
 
-  <div id="cmp-histograms" class="hidden">
-    <div class="grid">
-      <div class="grid-item"><div class="label">INIT → ASSEMBLY</div><img src="plots/duration_INIT_ASSEMBLY.png"></div>
-      <div class="grid-item"><div class="label">ASSEMBLY → WIREBONDING</div><img src="plots/duration_ASSEMBLY_WIREBONDING.png"></div>
-      <div class="grid-item"><div class="label">INIT → WIREBONDING</div><img src="plots/duration_INIT_WIREBONDING.png"></div>
-      <div class="grid-item"><div class="label">WIREBONDING → INITIAL WARM</div><img src="plots/duration_WIREBONDING_INITIAL_WARM.png"></div>
-      <div class="grid-item"><div class="label">INITIAL WARM → PARYLENE MASKING</div><img src="plots/duration_INITIAL_WARM_PARYLENE_MASKING.png"></div>
-      <div class="grid-item"><div class="label">PARYLENE MASKING → PARYLENE COATING</div><img src="plots/duration_PARYLENE_MASKING_PARYLENE_COATING.png"></div>
-      <div class="grid-item"><div class="label">PARYLENE COATING → PARYLENE UNMASKING</div><img src="plots/duration_PARYLENE_COATING_PARYLENE_UNMASKING.png"></div>
-      <div class="grid-item"><div class="label">PARYLENE UNMASKING → THERMAL CYCLES</div><img src="plots/duration_PARYLENE_UNMASKING_THERMAL_CYCLES.png"></div>
-      <div class="grid-item"><div class="label">THERMAL CYCLES → FINAL WARM</div><img src="plots/duration_THERMAL_CYCLES_FINAL_WARM.png"></div>
-      <div class="grid-item"><div class="label">INITIAL WARM → FINAL WARM</div><img src="plots/duration_INITIAL_WARM_FINAL_WARM.png"></div>
-      <div class="grid-item"><div class="label">FINAL WARM → FINAL COLD</div><img src="plots/duration_FINAL_WARM_FINAL_COLD.png"></div>
-    </div>
-  </div>
-
-</div>
+</div><!-- end panel-completion -->
 
 <script>
-  let currentCluster = 'PIXEL_MODULE_JAPAN';
-  let currentClusterTab = 'monthly';
-  let currentCompareTab = 'monthly';
+  const CLUSTERS = [
+    'PIXEL_MODULE_JAPAN', 'PIXEL_MODULE_CERN_JAPAN', 'PIXEL_MODULE_FRANCE',
+    'PIXEL_MODULE_GERMANY_BMBF', 'PIXEL_MODULE_GERMANY_MPI', 'PIXEL_MODULE_UK',
+    'PIXEL_MODULE_USA', 'PIXEL_MODULE_ITALY', 'PIXEL_MODULE_CERN',
+  ];
 
-  // ── Mode switching ──────────────────────────────
-  function setMode(mode) {
-    ['overview', 'cluster', 'compare'].forEach(m => {
-      document.getElementById(`mode-${m}`).classList.toggle('hidden', m !== mode);
-    });
-    document.querySelectorAll('.mode-btn').forEach((b, i) => {
-      b.classList.toggle('active', ['overview', 'cluster', 'compare'][i] === mode);
-    });
-  }
+  let currentCluster = 'ALL';
+  let currentMainTab = 'modules';
+  let currentInvTab  = 'summary';
 
-  // ── By-Cluster: sub-tab switching ──────────────
-  const clusterTabIds = ['modules', 'completion'];
-
-  function showClusterTab(tab) {
-    clusterTabIds.forEach(t => {
-      document.getElementById(`ct-${t}`).classList.toggle('hidden', t !== tab);
-    });
-    document.querySelectorAll('#cluster-tabs .tab').forEach((b, i) => {
-      b.classList.toggle('active', clusterTabIds[i] === tab);
-    });
-    currentClusterTab = tab;
-  }
-
-  // ── By-Cluster: cluster switching ──────────────
-  function selectCluster(cluster) {
+  // ── Top-level cluster selection ─────────────────
+  function selectTopCluster(cluster) {
     currentCluster = cluster;
-    document.querySelectorAll('#cluster-btns .cluster-btn').forEach(b => {
+    const isAll = cluster === 'ALL';
+
+    document.querySelectorAll('#top-cluster-btns .cluster-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.cluster === cluster);
     });
-    document.getElementById('img-c-monthly').src        = `plots/monthly_modules_${cluster}.png`;
-    document.getElementById('img-c-cumulative').src     = `plots/cumulative_pipeline_${cluster}.png`;
-    document.getElementById('img-c-summary-short').src  = `plots/stage_duration_summary_short_${cluster}.png`;
-    document.getElementById('img-c-batch').src          = `plots/batch_duration_${cluster}.png`;
+
+    // Number of Modules images
+    document.getElementById('img-monthly').src = isAll
+      ? 'plots/monthly_modules.png'
+      : `plots/monthly_modules_${cluster}.png`;
+    document.getElementById('img-cumulative').src = isAll
+      ? 'plots/cumulative_pipeline.png'
+      : `plots/cumulative_pipeline_${cluster}.png`;
+
+    // Time to Completion panels
+    document.getElementById('completion-all').classList.toggle('hidden', !isAll);
+    document.getElementById('completion-cluster').classList.toggle('hidden', isAll);
+    if (!isAll) {
+      document.getElementById('img-summary-short').src = `plots/stage_duration_summary_short_${cluster}.png`;
+      document.getElementById('img-batch-dur').src     = `plots/batch_duration_${cluster}.png`;
+    }
+
+    // Batch inventory: all-clusters table for ALL, specific table otherwise
+    document.getElementById('all-batches-panel').classList.toggle('hidden', !isAll);
+    CLUSTERS.forEach(c => {
+      document.getElementById(`batch-${c}`).classList.toggle('hidden', isAll || c !== cluster);
+    });
+
+    // Location summary: all-clusters stage table for ALL, location tables for specific cluster
+    document.getElementById('summary-all').classList.toggle('hidden', !isAll);
+    CLUSTERS.forEach(c => {
+      const el = document.getElementById(`loc-summary-${c}`);
+      if (el) el.classList.toggle('hidden', isAll || c !== cluster);
+    });
   }
 
-  // ── Compare: sub-tab switching ──────────────────
-  const compareTabIds = ['monthly', 'histograms'];
+  // ── Main tab switching ───────────────────────────
+  function showMainTab(tab) {
+    ['modules', 'inventory', 'completion'].forEach(t => {
+      document.getElementById(`panel-${t}`).classList.toggle('hidden', t !== tab);
+    });
+    document.querySelectorAll('#main-tabs .tab').forEach((b, i) => {
+      b.classList.toggle('active', ['modules', 'inventory', 'completion'][i] === tab);
+    });
+    currentMainTab = tab;
+  }
 
-  function showCompareTab(tab) {
-    compareTabIds.forEach(t => {
-      document.getElementById(`cmp-${t}`).classList.toggle('hidden', t !== tab);
+  // ── Inventory sub-tab switching ──────────────────
+  function showInvTab(tab) {
+    ['summary', 'batch'].forEach(t => {
+      document.getElementById(`inv-${t}`).classList.toggle('hidden', t !== tab);
     });
-    document.querySelectorAll('#compare-tabs .tab').forEach((b, i) => {
-      b.classList.toggle('active', compareTabIds[i] === tab);
+    document.querySelectorAll('#inv-tabs .tab').forEach((b, i) => {
+      b.classList.toggle('active', ['summary', 'batch'][i] === tab);
     });
-    currentCompareTab = tab;
+    currentInvTab = tab;
   }
 </script>
 

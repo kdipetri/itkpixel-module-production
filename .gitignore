@@ -1,5 +1,6 @@
-# generated plots
+# generated plots and inventory tables
 plots/
+inventory/
 
 # local data files (large parquets, not for version control)
 data/

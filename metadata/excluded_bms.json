@@ -1,0 +1,10 @@
+[
+    {"serialNumber": "20UPGB43200004", "reason": "broken during handling"},
+    {"serialNumber": "20UPGB43000508", "reason": "straggler, no activity since Dec 2025"},
+    {"serialNumber": "20UPGB43000530", "reason": "straggler, marked UNHAPPY/NOT_USED, no assembly progress"},
+    {"serialNumber": "20UPGB43200423", "reason": "straggler, no activity since Jun 2025"},
+    {"serialNumber": "20UPGB43109001", "reason": "pre-production test registration, no batch assigned, no activity since May 2024"},
+    {"serialNumber": "20UPGB43312007", "reason": "pre-production test registration, no batch assigned, no activity since Jul 2024"},
+    {"serialNumber": "20UPGB43312008", "reason": "pre-production test registration, no batch assigned, no activity since Jul 2024"},
+    {"serialNumber": "20UPGB43312009", "reason": "pre-production test registration, no batch assigned, no activity since Jul 2024"}
+]

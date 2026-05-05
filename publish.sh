@@ -19,7 +19,7 @@ trap cleanup EXIT
 echo "Connecting to ${REMOTE} ..."
 ssh -fNM -S "$SOCKET" -o ControlPersist=120 -o ServerAliveInterval=15 "$REMOTE"
 
-ssh -S "$SOCKET" "$REMOTE" "mkdir -p ${REMOTE_DIR}/plots"
+ssh -S "$SOCKET" "$REMOTE" "mkdir -p ${REMOTE_DIR}/plots ${REMOTE_DIR}/inventory"
 
 rsync -az --progress -e "ssh -S $SOCKET" \
     "${SCRIPT_DIR}/index.html" \
@@ -28,5 +28,9 @@ rsync -az --progress -e "ssh -S $SOCKET" \
 rsync -az --progress --delete -e "ssh -S $SOCKET" \
     "${SCRIPT_DIR}/plots/" \
     "${REMOTE}:${REMOTE_DIR}/plots/"
+
+rsync -az --progress --delete -e "ssh -S $SOCKET" \
+    "${SCRIPT_DIR}/inventory/" \
+    "${REMOTE}:${REMOTE_DIR}/inventory/"
 
 echo "Done. Site available at https://cern.ch/${REMOTE_USER}/moduleProduction"
