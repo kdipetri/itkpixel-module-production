@@ -63,6 +63,11 @@ def get_earliest_stage_timestamp(stage_list, stage_name):
     return min(timestamps) if timestamps else None
 
 
+def add_data_timestamp(fig, date):
+    if date is not None:
+        fig.text(0.99, 0.01, f"Data: {date}", ha='right', va='bottom', fontsize=9, color='gray')
+
+
 def _fmt_stage(name):
     return name.replace('MODULE/', '').replace('_', ' ')
 

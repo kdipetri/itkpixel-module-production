@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from data import apply_cern_japan_cluster, filter_components, load_data
+from moduleProductionPlots import modules_last_month
 from utils import load_json, map_institution_to_group, _shorten_batch_name
 
 CLUSTERS = [
@@ -535,8 +536,16 @@ def _render_html_table(tally, row_header='Cluster'):
     )
 
 
-def _inject_into_html(html_path, table_html, batch_tallies, all_batches_html, location_tallies=None):
+def _inject_into_html(html_path, table_html, batch_tallies, all_batches_html, location_tallies=None, data_date=None, recent_activity_html=None):
     html = Path(html_path).read_text(encoding='utf-8')
+
+    if data_date is not None:
+        ts_html = f'<p style="font-size:12px; color:#888; margin-bottom:10px;">Data as of {data_date}</p>'
+        html = re.sub(
+            r'<!-- INV-TIMESTAMP-START -->.*?<!-- INV-TIMESTAMP-END -->',
+            f'<!-- INV-TIMESTAMP-START -->\n{ts_html}\n<!-- INV-TIMESTAMP-END -->',
+            html, flags=re.DOTALL,
+        )
 
     html = re.sub(
         r'<!-- INV-TABLE-START -->.*?<!-- INV-TABLE-END -->',
@@ -567,6 +576,20 @@ def _inject_into_html(html_path, table_html, batch_tallies, all_batches_html, lo
                 html, flags=re.DOTALL,
             )
 
+    if recent_activity_html is not None:
+        if data_date is not None:
+            ts_html = f'<p style="font-size:12px; color:#888; margin-bottom:10px;">Data as of {data_date}</p>'
+            html = re.sub(
+                r'<!-- RECENT-TIMESTAMP-START -->.*?<!-- RECENT-TIMESTAMP-END -->',
+                f'<!-- RECENT-TIMESTAMP-START -->\n{ts_html}\n<!-- RECENT-TIMESTAMP-END -->',
+                html, flags=re.DOTALL,
+            )
+        html = re.sub(
+            r'<!-- RECENT-TABLE-START -->.*?<!-- RECENT-TABLE-END -->',
+            f'<!-- RECENT-TABLE-START -->\n{recent_activity_html}\n<!-- RECENT-TABLE-END -->',
+            html, flags=re.DOTALL,
+        )
+
     Path(html_path).write_text(html, encoding='utf-8')
 
 
@@ -574,7 +597,7 @@ def main():
     out_dir = Path("inventory")
     out_dir.mkdir(exist_ok=True)
 
-    module_df, bm_df, flex_df = load_data()
+    module_df, bm_df, flex_df, data_date = load_data()
     module_df, bm_df, flex_df = filter_components(module_df, bm_df, flex_df)
     module_df, bm_df          = apply_cern_japan_cluster(module_df, bm_df)
 
@@ -596,12 +619,19 @@ def main():
     location_tallies = make_location_tallies(module_df, bm_df, flex_df)
     for cluster, lt in location_tallies.items():
         lt.to_csv(out_dir / f"location_inventory_{cluster}.csv")
+
+    recent_tally = modules_last_month(quad_df, CLUSTERS)
+    recent_tally.index = [CLUSTER_LABELS.get(c, c) for c in recent_tally.index]
+    recent_tally.to_csv(out_dir / "recent_activity.csv")
+
     _inject_into_html(
         "index.html",
         _render_html_table(tally),
         batch_tallies,
         _render_html_table(all_batches, row_header='Batch'),
         location_tallies=location_tallies,
+        data_date=data_date,
+        recent_activity_html=_render_html_table(recent_tally),
     )
     print("Injected tables into index.html")
 

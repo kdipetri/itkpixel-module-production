@@ -29,6 +29,10 @@ rsync -az --progress --delete -e "ssh -S $SOCKET" \
     "${SCRIPT_DIR}/plots/" \
     "${REMOTE}:${REMOTE_DIR}/plots/"
 
+rsync -az --progress -e "ssh -S $SOCKET" \
+    "${SCRIPT_DIR}/plots/monthly_modules.png" \
+    "${REMOTE}:${REMOTE_DIR}/plots/"
+
 rsync -az --progress --delete -e "ssh -S $SOCKET" \
     "${SCRIPT_DIR}/inventory/" \
     "${REMOTE}:${REMOTE_DIR}/inventory/"

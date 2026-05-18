@@ -54,10 +54,11 @@ SHORT_STAGE_PAIRS = [
 
 
 def modules_last_month(df, clusters):
-    stages = ['MODULE/ASSEMBLY', 'MODULE/INITIAL_WARM', 'MODULE/FINAL_WARM', 'MODULE/FINAL_COLD']
-    print('cluster', "ASSEMBLY", "INITIAL_WARM", "FINAL_WARM", "FINAL_COLD")
+    stages    = ['MODULE/INIT', 'MODULE/INITIAL_WARM', 'MODULE/PARYLENE_UNMASKING', 'MODULE/FINAL_COLD']
+    col_names = ['ASSEMBLY',    'INITIAL_WARM',         'PARYLENE',                  'FINAL_COLD']
     now      = datetime.now(timezone.utc)
     min_date = now - timedelta(days=30)
+    rows = {}
     for cluster in clusters:
         df_cluster = df[df["MODULE.cluster_code"] == cluster]
         counts = []
@@ -66,34 +67,44 @@ def modules_last_month(df, clusters):
                 df_cluster['MODULE.stages'].apply(get_latest_stage_timestamp, stage_name=stage).dropna(),
                 utc=True,
             )
+            if cluster == 'PIXEL_MODULE_JAPAN' and stage == 'MODULE/PARYLENE_UNMASKING':
+                times = pd.to_datetime(
+                    df_cluster['MODULE.stages'].apply(get_latest_stage_timestamp, stage_name='MODULE/FINAL_WARM').dropna(),
+                    utc=True,
+                )
             counts.append(len(times[(min_date <= times) & (times <= now)]))
-        print(cluster, *counts)
+        rows[cluster] = counts
+    result = pd.DataFrame.from_dict(rows, orient='index', columns=col_names)
+    print('cluster', *col_names)
+    for cluster, row in result.iterrows():
+        print(cluster, *row.tolist())
+    return result
 
 
 def main():
-    module_df, bm_df, flex_df = load_data()
+    module_df, bm_df, flex_df, data_date = load_data()
     module_df, bm_df, flex_df = filter_components(module_df, bm_df, flex_df)
     module_df, bm_df          = apply_cern_japan_cluster(module_df, bm_df)
 
     quad_df = module_df[module_df['MODULE.type_code'].str.contains('QUAD', na=False)]
 
-    create_monthly_production(quad_df, "plots/monthly_modules.png")
-    create_cumulative_all_clusters(module_df, bm_df, flex_df, "plots")
+    create_monthly_production(quad_df, "plots/monthly_modules.png", data_date=data_date)
+    create_cumulative_all_clusters(module_df, bm_df, flex_df, "plots", data_date=data_date)
 
     for cluster in CLUSTERS:
         print(cluster)
         df_cluster = quad_df[quad_df['MODULE.cluster_code'] == cluster]
-        create_monthly_production(df_cluster, f"plots/monthly_modules_{cluster}.png", cluster=cluster)
-        create_weekly_throughput(df_cluster, f"plots/weekly_modules_{cluster}.png", cluster=cluster)
-        create_cumulative_pipeline_plot(module_df, bm_df, flex_df, cluster, "plots")
+        create_monthly_production(df_cluster, f"plots/monthly_modules_{cluster}.png", cluster=cluster, data_date=data_date)
+        create_weekly_throughput(df_cluster, f"plots/weekly_modules_{cluster}.png", cluster=cluster, data_date=data_date)
+        create_cumulative_pipeline_plot(module_df, bm_df, flex_df, cluster, "plots", data_date=data_date)
 
-    create_batch_duration_plot(quad_df, CLUSTERS, "plots")
-    create_batch_duration_plot(quad_df, ['ALL'], "plots")
+    create_batch_duration_plot(quad_df, CLUSTERS, "plots", data_date=data_date)
+    create_batch_duration_plot(quad_df, ['ALL'], "plots", data_date=data_date)
     modules_last_month(quad_df, CLUSTERS)
-    create_stage_duration_histograms(quad_df, CLUSTERS, "plots")
-    create_stage_duration_summary(quad_df, CLUSTERS, "plots")
-    create_stage_duration_summary(quad_df, CLUSTERS, "plots", pairs=SHORT_STAGE_PAIRS, suffix='_short')
-    create_stage_duration_summary(quad_df, ['ALL'], "plots", pairs=SHORT_STAGE_PAIRS, suffix='_short')
+    create_stage_duration_histograms(quad_df, CLUSTERS, "plots", data_date=data_date)
+    create_stage_duration_summary(quad_df, CLUSTERS, "plots", data_date=data_date)
+    create_stage_duration_summary(quad_df, CLUSTERS, "plots", pairs=SHORT_STAGE_PAIRS, suffix='_short', data_date=data_date)
+    create_stage_duration_summary(quad_df, ['ALL'], "plots", pairs=SHORT_STAGE_PAIRS, suffix='_short', data_date=data_date)
 
 
 if __name__ == "__main__":

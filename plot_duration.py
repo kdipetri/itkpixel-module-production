@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
-from utils import _fmt_stage, _shorten_batch_name, get_latest_stage_timestamp
+from utils import _fmt_stage, _shorten_batch_name, add_data_timestamp, get_latest_stage_timestamp
 
 STAGE_PAIRS = [
     ('MODULE/INIT',              'MODULE/ASSEMBLY'),
@@ -27,7 +27,7 @@ def _stage_durations_days(df, stage_from, stage_to):
     return dt[dt.notna() & (dt >= 0)]
 
 
-def create_stage_duration_histograms(df, clusters, base_path):
+def create_stage_duration_histograms(df, clusters, base_path, data_date=None):
     for stage_from, stage_to in STAGE_PAIRS:
         fig, ax = plt.subplots(figsize=(6.5, 5))
 
@@ -73,11 +73,12 @@ def create_stage_duration_histograms(df, clusters, base_path):
         new_left = 0.08
         ax.set_position([new_left, pos.y0, pos.x0 + pos.width - new_left, legend_bottom - pos.y0 - 0.02])
         slug = f"{stage_from.replace('MODULE/', '')}_{stage_to.replace('MODULE/', '')}"
+        add_data_timestamp(fig, data_date)
         fig.savefig(f"{base_path}/duration_{slug}.png", bbox_inches='tight', pad_inches=0.2)
         plt.close(fig)
 
 
-def create_stage_duration_summary(df, clusters, base_path, pairs=None, suffix=''):
+def create_stage_duration_summary(df, clusters, base_path, pairs=None, suffix='', data_date=None):
     if pairs is None:
         pairs = STAGE_PAIRS
     stage_labels = [
@@ -120,11 +121,12 @@ def create_stage_duration_summary(df, clusters, base_path, pairs=None, suffix=''
         ax.set_ylim(bottom=0)
         ax.text(0.05, 1.02, label, transform=ax.transAxes, fontsize=16)
         fig.tight_layout()
+        add_data_timestamp(fig, data_date)
         fig.savefig(f"{base_path}/stage_duration_summary{suffix}_{cluster}.png")
         plt.close(fig)
 
 
-def create_batch_duration_plot(module_df, clusters, base_path):
+def create_batch_duration_plot(module_df, clusters, base_path, data_date=None):
     bm_extra = pq.read_table(
         Path("data/df_pixel_baremodules.parquet"),
         columns=['BARE_MODULE.serialNumber', 'BARE_MODULE.batch_number', 'BARE_MODULE.cts'],
@@ -192,5 +194,6 @@ def create_batch_duration_plot(module_df, clusters, base_path):
         ax.patch.set_visible(False)
         ax.text(0.05, 1.02, label, transform=ax.transAxes, fontsize=16)
         fig.tight_layout()
+        add_data_timestamp(fig, data_date)
         fig.savefig(f"{base_path}/batch_duration_{cluster}.png")
         plt.close(fig)

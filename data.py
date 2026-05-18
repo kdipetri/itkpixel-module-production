@@ -29,10 +29,10 @@ FLEX_COLS = [
 
 
 def load_data():
-    module_df, _ = parquet_to_df(Path("data/df_pixel_modules.parquet"), columns=MODULE_COLS)
-    bm_df, _     = parquet_to_df(Path("data/df_pixel_baremodules.parquet"), columns=BM_COLS)
-    flex_df, _   = parquet_to_df(Path("data/df_pixel_flex.parquet"), columns=FLEX_COLS)
-    return module_df, bm_df, flex_df
+    module_df, data_date = parquet_to_df(Path("data/df_pixel_modules.parquet"), columns=MODULE_COLS)
+    bm_df, _             = parquet_to_df(Path("data/df_pixel_baremodules.parquet"), columns=BM_COLS)
+    flex_df, _           = parquet_to_df(Path("data/df_pixel_flex.parquet"), columns=FLEX_COLS)
+    return module_df, bm_df, flex_df, data_date
 
 
 def filter_components(module_df, bm_df, flex_df):

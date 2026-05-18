@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from utils import _fmt_stage, get_earliest_stage_timestamp, get_latest_stage_timestamp
+from utils import _fmt_stage, add_data_timestamp, get_earliest_stage_timestamp, get_latest_stage_timestamp
 
 STAGE_COLORS = {
     'MODULE/ASSEMBLY':           'C0',
@@ -13,7 +13,7 @@ BM_COLOR   = 'C4'
 FLEX_COLOR = 'gray'
 
 
-def create_monthly_production(df, base_path, cluster='All Clusters'):
+def create_monthly_production(df, base_path, cluster='All Clusters', data_date=None):
     stages = ['MODULE/ASSEMBLY', 'MODULE/INITIAL_WARM', 'MODULE/PARYLENE_UNMASKING', 'MODULE/FINAL_COLD']
     fig = plt.figure(figsize=(8, 5))
     stage_times = []
@@ -49,11 +49,12 @@ def create_monthly_production(df, base_path, cluster='All Clusters'):
     plt.ylabel('# Modules / Month')
     fig.tight_layout()
     plt.text(0.05, 1.02, cluster.replace('PIXEL_MODULE_', ''), transform=plt.gca().transAxes, fontsize=16)
+    add_data_timestamp(fig, data_date)
     plt.savefig(base_path)
     plt.close(fig)
 
 
-def create_weekly_throughput(df, base_path, cluster='All Clusters'):
+def create_weekly_throughput(df, base_path, cluster='All Clusters', data_date=None):
     stages = ['MODULE/ASSEMBLY', 'MODULE/INITIAL_WARM', 'MODULE/FINAL_WARM', 'MODULE/FINAL_COLD']
     fig = plt.figure()
     for stage in stages:
@@ -70,6 +71,7 @@ def create_weekly_throughput(df, base_path, cluster='All Clusters'):
     plt.xticks(rotation=45)
     plt.text(0.05, 1.02, cluster.replace('PIXEL_MODULE_', ''), transform=plt.gca().transAxes, fontsize=16)
     plt.tight_layout()
+    add_data_timestamp(fig, data_date)
     plt.savefig(base_path)
     plt.close(fig)
 
@@ -121,7 +123,7 @@ def _plot_cumulative_pipeline(ax, module_df, bm_df, flex_df):
     ax.tick_params(axis='x', rotation=45)
 
 
-def create_cumulative_pipeline_plot(module_df, bm_df, flex_df, cluster, base_path):
+def create_cumulative_pipeline_plot(module_df, bm_df, flex_df, cluster, base_path, data_date=None):
     fig, ax = plt.subplots(figsize=(8, 5))
     _plot_cumulative_pipeline(
         ax,
@@ -131,14 +133,16 @@ def create_cumulative_pipeline_plot(module_df, bm_df, flex_df, cluster, base_pat
     )
     ax.text(0.05, 1.02, cluster.replace('PIXEL_MODULE_', ''), transform=ax.transAxes, fontsize=16)
     fig.tight_layout()
+    add_data_timestamp(fig, data_date)
     fig.savefig(f"{base_path}/cumulative_pipeline_{cluster}.png")
     plt.close(fig)
 
 
-def create_cumulative_all_clusters(module_df, bm_df, flex_df, base_path):
+def create_cumulative_all_clusters(module_df, bm_df, flex_df, base_path, data_date=None):
     fig, ax = plt.subplots(figsize=(8, 5))
     _plot_cumulative_pipeline(ax, module_df, bm_df, flex_df)
     ax.text(0.05, 1.02, 'All Clusters', transform=ax.transAxes, fontsize=16)
     fig.tight_layout()
+    add_data_timestamp(fig, data_date)
     fig.savefig(f"{base_path}/cumulative_pipeline.png")
     plt.close(fig)
