@@ -12,11 +12,13 @@ from plot_duration import (
 )
 from plot_throughput import (
     create_cumulative_all_clusters,
+    create_cumulative_by_site,
     create_cumulative_pipeline_plot,
+    create_monthly_by_site,
     create_monthly_production,
     create_weekly_throughput,
 )
-from utils import get_latest_stage_timestamp
+from utils import get_earliest_stage_timestamp, get_latest_stage_timestamp
 
 plt.rcParams.update({
     "font.size": 14,
@@ -64,12 +66,12 @@ def modules_last_month(df, clusters):
         counts = []
         for stage in stages:
             times = pd.to_datetime(
-                df_cluster['MODULE.stages'].apply(get_latest_stage_timestamp, stage_name=stage).dropna(),
+                df_cluster['MODULE.stages'].apply(get_earliest_stage_timestamp, stage_name=stage).dropna(),
                 utc=True,
             )
             if cluster == 'PIXEL_MODULE_JAPAN' and stage == 'MODULE/PARYLENE_UNMASKING':
                 times = pd.to_datetime(
-                    df_cluster['MODULE.stages'].apply(get_latest_stage_timestamp, stage_name='MODULE/FINAL_WARM').dropna(),
+                    df_cluster['MODULE.stages'].apply(get_earliest_stage_timestamp, stage_name='MODULE/FINAL_WARM').dropna(),
                     utc=True,
                 )
             counts.append(len(times[(min_date <= times) & (times <= now)]))
@@ -97,6 +99,8 @@ def main():
         create_monthly_production(df_cluster, f"plots/monthly_modules_{cluster}.png", cluster=cluster, data_date=data_date)
         create_weekly_throughput(df_cluster, f"plots/weekly_modules_{cluster}.png", cluster=cluster, data_date=data_date)
         create_cumulative_pipeline_plot(module_df, bm_df, flex_df, cluster, "plots", data_date=data_date)
+        create_monthly_by_site(df_cluster, "plots", cluster=cluster, data_date=data_date)
+        create_cumulative_by_site(df_cluster, "plots", cluster=cluster, data_date=data_date)
 
     create_batch_duration_plot(quad_df, CLUSTERS, "plots", data_date=data_date)
     create_batch_duration_plot(quad_df, ['ALL'], "plots", data_date=data_date)

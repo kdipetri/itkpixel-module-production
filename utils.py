@@ -50,6 +50,51 @@ def assign_clusters_from_locations(locations_series, target_stages, fallback_ser
     return result
 
 
+PIPELINE_RANK = {s: i for i, s in enumerate([
+    'MODULE/INIT',
+    'MODULE/ASSEMBLY',
+    'MODULE/TAB_CUTTING',
+    'MODULE/WIREBONDING',
+    'MODULE/WIREBOND_PROTECTION',
+    'MODULE/INITIAL_WARM',
+    'MODULE/INITIAL_COLD',
+    'MODULE/PARYLENE_MASKING',
+    'MODULE/PARYLENE_COATING',
+    'MODULE/PARYLENE_UNMASKING',
+    'MODULE/POST_PARYLENE_WARM',
+    'MODULE/POST_PARYLENE_COLD',
+    'MODULE/THERMAL_CYCLES',
+    'MODULE/LONG_TERM_STABILITY_TEST',
+    'MODULE/FINAL_WARM',
+    'MODULE/FINAL_COLD',
+    'MODULE/FINAL_METROLOGY',
+    'MODULE/QC_STATUS',
+    'MODULE/QC_CROSSCHECK',
+    'MODULE/RECEPTION',
+    'MODULE/COMPLETE',
+])}
+
+
+def get_stage_institution(institution_code, locations, target_stage):
+    """Return the institution where target_stage was signed off.
+
+    Uses MODULE.locations: each entry records the institution a module arrived at
+    and the last stage completed before shipping (stage field), meaning all stages
+    AFTER that rank were performed at the new institution.
+    """
+    target_rank = PIPELINE_RANK.get(target_stage, -1)
+    if target_rank < 0:
+        return institution_code
+    inst = institution_code
+    for loc in sorted(locations, key=lambda l: PIPELINE_RANK.get(l.get('stage', ''), 999)):
+        loc_rank = PIPELINE_RANK.get(loc.get('stage', ''), 999)
+        if loc_rank < target_rank:
+            inst = loc['institution']
+        else:
+            break
+    return inst
+
+
 def get_latest_stage_timestamp(stage_list, stage_name):
     timestamps = [s['dateTime'] for s in stage_list if s['code'] == stage_name]
     return max(timestamps) if timestamps else None

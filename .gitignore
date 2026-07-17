@@ -28,3 +28,11 @@ japan_missing_assembly.txt
 
 # SSH multiplexing sockets
 /tmp/ssh-mux-*
+
+# secrets
+.env
+
+# caches and scratch outputs
+cache/
+.webcache/
+output/
